@@ -1,0 +1,1 @@
+GSAP 3.15.0. Copyright 2008-2026 GreenSock. All rights reserved. Standard no charge license: https://gsap.com/standard-license. License notice is also preserved in the distributed JavaScript files.

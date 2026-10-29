@@ -1,0 +1,34 @@
+{
+  "units": "meters",
+  "blenderVersion": "4.3.2",
+  "source": "Original architecture modeled and rendered in Blender",
+  "groups": [
+    "structure",
+    "masonry",
+    "electrical",
+    "plumbing",
+    "insulation",
+    "tiles",
+    "finish",
+    "furnishings"
+  ],
+  "bounds": {
+    "width": 8.2,
+    "depth": 6.1,
+    "height": 4.6
+  },
+  "camera": {
+    "position": [
+      10.8,
+      9.8,
+      12.4
+    ],
+    "target": [
+      0,
+      1.45,
+      0
+    ],
+    "fov": 34
+  },
+  "note": "glTF is Y-up. Camera sees open front and right. Child extras.stage and extras.sequence support assembly choreography."
+}
