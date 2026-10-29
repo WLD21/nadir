@@ -65,3 +65,5 @@ Testing exposed an existing initial-fragment bug: ScrollTrigger initialization i
 
 Evidence and temporary harnesses are retained locally under work/intro-qa and work/intro-samples. Phone viewports are emulated; physical devices and Safari remain untested.
 
+The live visual pass revealed edge clipping in the completed intro on taller phones. Intro camera distance now adapts to its canvas aspect ratio. The corrected 390×844 frame preserves the whole house, and desktop framing, handoff, replay, skip and session bypass were rechecked. Final production screenshots are retained under work/intro-production.
+

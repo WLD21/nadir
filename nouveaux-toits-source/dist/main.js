@@ -175,7 +175,8 @@ function createView(container, source, isHero=false) {
     const mobile=container.clientWidth<650;
     const angle=(isHero?state.heroScroll*.055+state.introYaw*.45:(p-.5)*.12)+state.pointerX*.035;
     model.rotation.y=angle;
-    const distance=(isHero?(mobile?1.06:1.01):(mobile?1.26:1.02))+(isHero?state.introZoom*.5:0);
+    const introFit=isHero&&state.intro?Math.max(1,1.05/(container.clientWidth/container.clientHeight)):1;
+    const distance=((isHero?(mobile?1.06:1.01):(mobile?1.26:1.02))+(isHero?state.introZoom*.5:0))*introFit;
     target.y=1.45+(isHero?state.introExplode*.95:0);
     camera.position.set((10.8+state.pointerX*.6)*distance,(9.8+state.pointerY*.3)*distance,12.4*distance);camera.lookAt(target);
     renderer.render(scene,camera);
