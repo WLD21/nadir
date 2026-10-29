@@ -2,6 +2,8 @@
 
 Interior-renovation website in French, Dutch and English, with an original Blender house model and scroll-driven assembly.
 
+The opening sequence assembles the house in 3D and carries it into the homepage. It plays once per browser-tab session, can be skipped or replayed from the footer, and bypasses autoplay for reduced motion and direct section links. The intro reuses the existing hero renderer and fails open if the model cannot load.
+
 **Website:** https://nadir-iota-nine.vercel.app
 
 ## Deployment

@@ -47,3 +47,9 @@ Registry was empty on 2026-10-29. No historical rows to compare; gate passes wit
 | Commitment | input surface in natural flow | choices resolve into a project brief |
 
 Target desktop length about 10 viewport heights, assembly about 4.8. Phone and motion-off recompose independently. No video, no generated image provider needed.
+
+## Follow-up: 3D website introduction
+
+The user requested a 3D animated opening on the existing GitHub/Vercel website. Under the existing creative delegation, the opening uses the same Blender house: separated trade layers settle into a complete interior as the camera turns, the brand name resolves, and the scene moves into its homepage position. The brief opening introduces the longer scroll assembly without changing the page grammar or its dominant interaction. French, Dutch and English copy follows the selected language.
+
+Autoplay runs once per tab session. Skip, Escape and scrolling dismiss it immediately; footer replay is explicit. Reduced motion bypasses autoplay and uses a static scene on replay. Section links and history returns open directly. A bounded loading deadline and unavailable-WebGL fallback keep the homepage accessible. The hero canvas is reused, so the page still owns two WebGL renderers.

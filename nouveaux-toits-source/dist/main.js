@@ -43,6 +43,7 @@ function setLanguage(lang) {
   document.querySelectorAll('[data-i18n]').forEach(el => { if (values[el.dataset.i18n]) el.textContent = values[el.dataset.i18n]; });
   document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
   window.NTBooking.setLanguage(lang);
+  window.NTIntro?.setLanguage(lang);
   updateStageCopy();
   document.title = lang === 'fr' ? 'Nouveaux Toits · L’intérieur réinventé' : lang === 'nl' ? 'Nouveaux Toits · Uw interieur, opnieuw ontdekt' : 'Nouveaux Toits · Your interior, reimagined';
   const labels={fr:['Aller au contenu','Navigation principale','Maquette architecturale d’un intérieur rénové','Assemblage de l’intérieur','Échantillons de carrelage','Échantillons de matériaux','Robinet et raccords'],nl:['Ga naar de inhoud','Hoofdnavigatie','Architectuurmodel van een gerenoveerd interieur','Opbouw van het interieur','Tegelstalen','Materiaalstalen','Kraan en aansluitingen'],en:['Skip to content','Main navigation','Architectural model of a renovated interior','Interior assembly','Porcelain tile samples','Material samples','Tap and fittings']}[lang];
@@ -72,6 +73,26 @@ document.querySelectorAll('[data-stage]').forEach(b => b.addEventListener('click
   }
 }));
 try {setLanguage(localStorage.getItem('nt-language')||'fr');} catch {setLanguage('fr');}
+
+// Settle a new document's fragment before WebGL setup refreshes ScrollTrigger.
+// Otherwise that refresh can interrupt the browser's initial smooth anchor scroll.
+// Do this before asynchronous model loading; subsequent user input and history win.
+if(location.hash&&performance.getEntriesByType('navigation')[0]?.type==='navigate'){
+  try{
+    const hash=location.hash,target=document.getElementById(decodeURIComponent(hash.slice(1)));
+    if(target){
+      const pending=new AbortController(),cancel=()=>pending.abort();
+      ['pointerdown','wheel','touchstart','keydown','click','hashchange','popstate','pagehide'].forEach(type=>
+        window.addEventListener(type,cancel,{capture:true,passive:true,signal:pending.signal}));
+      target.scrollIntoView({behavior:'instant',block:'start'});
+      // Font metrics can move the target. Correct only while the visitor has not interacted.
+      document.fonts.ready.then(()=>{
+        if(!pending.signal.aborted&&location.hash===hash)target.scrollIntoView({behavior:'instant',block:'start'});
+        pending.abort();
+      });
+    }
+  }catch{}
+}
 
 const windows = {
   structure: [-.1,0], masonry:[0,.19],plumbing:[.15,.33],electrical:[.29,.47],
@@ -120,7 +141,8 @@ function createView(container, source, isHero=false) {
   });
   const maxSeq={};meshes.forEach(m=>maxSeq[m.stage]=Math.max(maxSeq[m.stage]||1,m.seq));
   const shadow=new THREE.Mesh(new THREE.PlaneGeometry(30,30),new THREE.ShadowMaterial({color:0x17282a,opacity:isHero?.065:.12}));shadow.rotation.x=-Math.PI/2;shadow.position.y=-.2;shadow.receiveShadow=true;scene.add(shadow);
-  const state={progress:isHero?1:0,inspect:0,pointerX:0,pointerY:0,heroScroll:0};
+  const introStarting=isHero&&window.NTIntro?.active&&!reduced;
+  const state={progress:isHero?1:0,inspect:0,pointerX:0,pointerY:0,heroScroll:0,intro:introStarting?1:0,introExplode:introStarting?1:0,introYaw:introStarting?-1:0,introZoom:introStarting?1:0};
   let inView=true;
   function paint(force=false){
     if(!inView&&!force)return;
@@ -142,15 +164,23 @@ function createView(container, source, isHero=false) {
         if(m.stage==='finish'){o.position.y+=(1-k)*1.4+hidden*1.6;}
         if(m.stage==='furnishings'){o.position.y+=(1-k)*1.7+hidden*1.6;}
       }
+      if(isHero&&state.intro){
+        const offsets={structure:[0,0,0,0],masonry:[-.65,1.1,-.3,1],plumbing:[.4,1.8,.7,2],electrical:[-.4,2.1,-.5,3],insulation:[-.9,2.6,-.1,4],tiles:[0,.9,0,5],finish:[.6,3.4,0,6],furnishings:[.15,4.1,0,7]};
+        const [x,y,z,order]=offsets[m.stage];
+        const lift=clamp(state.introExplode*1.45-(1-order/7)*.45,0,1);
+        o.position.x+=x*lift;o.position.y+=y*lift;o.position.z+=z*lift;
+      }
       m.mats.forEach((mat,i)=>{const opacity=m.opacity[i]*clamp(u*4,0,1)*(1-hidden);mat.transparent=opacity<.99;mat.opacity=opacity;mat.depthWrite=opacity>.5;});
     });
     const mobile=container.clientWidth<650;
-    const angle=(isHero?state.heroScroll*.055:(p-.5)*.12)+state.pointerX*.035;
+    const angle=(isHero?state.heroScroll*.055+state.introYaw*.45:(p-.5)*.12)+state.pointerX*.035;
     model.rotation.y=angle;
-    const distance=isHero?(mobile?1.06:1.01):(mobile?1.26:1.02);
+    const distance=(isHero?(mobile?1.06:1.01):(mobile?1.26:1.02))+(isHero?state.introZoom*.5:0);
+    target.y=1.45+(isHero?state.introExplode*.95:0);
     camera.position.set((10.8+state.pointerX*.6)*distance,(9.8+state.pointerY*.3)*distance,12.4*distance);camera.lookAt(target);
     renderer.render(scene,camera);
     container.classList.add('ready');
+    if(isHero&&state.intro)container.dataset.introFrame=JSON.stringify({rotation:Math.round(model.rotation.y*100),height:Math.round(target.y*100),meshes:meshes.filter((_,i)=>i%25===0).map(m=>Math.round(m.object.position.y*100))});
     if(!isHero){
       const sample=meshes.filter(m=>m.object.visible);
       container.dataset.scVerifyState=JSON.stringify({visible:sample.length,positions:sample.filter((_,i)=>i%11===0).map(m=>[Math.round(m.object.position.x*50),Math.round(m.object.position.y*50),Math.round(m.object.position.z*50)]),rotation:Math.round(model.rotation.y*1000),inspect:Math.round(state.inspect*100)});
@@ -160,9 +190,9 @@ function createView(container, source, isHero=false) {
   function resize(){const w=container.clientWidth,h=container.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();paint(true);}
   const observer=new IntersectionObserver(entries=>{inView=entries[0].isIntersecting;if(inView)paint(true);},{rootMargin:'150px'});observer.observe(container);
   new ResizeObserver(resize).observe(container);resize();
-  if(finePointer&&!reduced){container.addEventListener('pointermove',e=>{const r=container.getBoundingClientRect();gsap.to(state,{pointerX:(e.clientX-r.left)/r.width-.5,pointerY:(e.clientY-r.top)/r.height-.5,duration:.65,overwrite:'auto',onUpdate:paint});});container.addEventListener('pointerleave',()=>gsap.to(state,{pointerX:0,pointerY:0,duration:.8,overwrite:'auto',onUpdate:paint}));}
-  renderer.domElement.addEventListener('webglcontextlost',()=>container.classList.remove('ready'));
-  return {state,paint,renderer,scene,camera,model};
+  if(finePointer&&!reduced){container.addEventListener('pointermove',e=>{if(window.NTIntro?.active)return;const r=container.getBoundingClientRect();gsap.to(state,{pointerX:(e.clientX-r.left)/r.width-.5,pointerY:(e.clientY-r.top)/r.height-.5,duration:.65,overwrite:'auto',onUpdate:paint});});container.addEventListener('pointerleave',()=>{if(!window.NTIntro?.active)gsap.to(state,{pointerX:0,pointerY:0,duration:.8,overwrite:'auto',onUpdate:paint});});}
+  renderer.domElement.addEventListener('webglcontextlost',()=>{container.classList.remove('ready');if(isHero)window.NTIntro?.abort();});
+  return {state,paint,resize,renderer,scene,camera,model};
 }
 
 function applyProgress(p){
@@ -178,15 +208,17 @@ try {
   heroView=createView($('#hero-scene'),gltf.scene,true);
   assemblyView=createView($('#assembly-scene'),gltf.scene,false);
   window.NT_SCENE={hero:heroView,assembly:assemblyView};
+  window.NTIntro?.attach(heroView);
   if(reduced){applyProgress(1);}else{
     gsap.registerPlugin(ScrollTrigger);
     ScrollTrigger.create({trigger:assembly,start:'top top',end:'bottom bottom',onUpdate:self=>applyProgress(self.progress),invalidateOnRefresh:true});
-    ScrollTrigger.create({trigger:$('#home'),start:'top top',end:'bottom top',onUpdate:self=>{heroView.state.heroScroll=self.progress;heroView.paint();}});
+    ScrollTrigger.create({trigger:$('#home'),start:'top top',end:'bottom top',onUpdate:self=>{if(window.NTIntro?.active)return;heroView.state.heroScroll=self.progress;heroView.paint();}});
     ScrollTrigger.refresh();
     applyProgress(clamp(-assembly.getBoundingClientRect().top/(assembly.offsetHeight-innerHeight),0,1));
   }
   document.documentElement.dataset.modelReady='true';
 } catch(error) {
+  window.NTIntro?.abort();
   document.documentElement.dataset.modelReady='fallback';
   console.info('Architectural poster fallback active:',error.message);
   if(!reduced){gsap.registerPlugin(ScrollTrigger);ScrollTrigger.create({trigger:assembly,start:'top top',end:'bottom bottom',onUpdate:self=>applyProgress(self.progress)});}

@@ -53,3 +53,15 @@ Real iPhone/Android hardware, Safari, Low Power Mode and slow mobile GPUs were n
 
 Local test URL: http://localhost:4500. The temporary preview server is stopped after delivery. The published private Site is the durable review destination.
 
+## GitHub/Vercel follow-up: animated introduction
+
+The current publishing target is https://nadir-iota-nine.vercel.app, deployed from WLD21/nadir. The opening reuses the hero WebGL scene to assemble separated house layers, reveal the brand and carry the finished scene into the homepage. No extra model download or third renderer is introduced. ScrollCraft's shared engine remains unchanged.
+
+Chrome verification covered 1440×900, 390×844 and 360×640. Actual intermediate rendered mesh positions and camera framing change across four sampled times. The final composition and handoff were visually inspected. Exactly two canvases remain after completion and replay; no horizontal overflow or JavaScript errors were observed.
+
+Skip before model loading, a 4.5-second loading timeout with a late successful model load, Escape, footer replay, once-per-session reload, reduced-motion autoplay bypass/static replay, no WebGL and no JavaScript all passed. Escape, pagehide and a simulated hidden-document event during the final handoff restore the hero immediately and remove the modal, temporary image and scroll lock. French, Dutch and English intro copy follows the language setting. Programmatic heading focus is retained without an unintended visible outline. Original inspection still changes visible mesh counts from 180 to 66 and back to 180.
+
+Testing exposed an existing initial-fragment bug: ScrollTrigger initialization interrupted the browser's smooth anchor navigation. Initial section targets now resolve before asynchronous model loading, with a font-layout correction canceled by user interaction. Both project and materials anchors passed with normal/reduced motion and normal/delayed model loading (eight combinations). Scrolling or clicking home during delayed loading retains the visitor's chosen position.
+
+Evidence and temporary harnesses are retained locally under work/intro-qa and work/intro-samples. Phone viewports are emulated; physical devices and Safari remain untested.
+
