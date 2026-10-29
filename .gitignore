@@ -1,0 +1,9 @@
+node_modules/
+.vercel/
+.env
+.env.*
+!.env.example
+lab/
+*.blend1
+*.log
+.DS_Store
